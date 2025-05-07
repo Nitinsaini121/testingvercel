@@ -18,7 +18,7 @@ export const registerFormSchema = z.object({
 export type RegisterForm = z.infer<typeof registerFormSchema>
 
 export const loginFormSchema = z.object({
-  login: requiredString('login').email({
+  email: requiredString('Email').email({
     message: 'Please provide a valid email address'
   }),
   password: requiredString('Password')

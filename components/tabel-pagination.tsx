@@ -20,55 +20,12 @@ export const TablePagination = ({
   setPage,
   length
 }: TablePaginationProps) => {
-  const totalPages = Math.ceil(totalRecord / length) || 1;
-
-  const renderPages = () => {
-    const pages: (number | 'dots')[] = [];
-
-    if (totalPages <= 10) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1); // First page
-
-      if (page > 4) pages.push('dots');
-
-      const start = Math.max(2, page - 2);
-      const end = Math.min(totalPages - 1, page + 2);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (page < totalPages - 3) pages.push('dots');
-
-      pages.push(totalPages); // Last page
-    }
-
-    return pages.map((item, index) =>
-      item === 'dots' ? (
-        <PaginationItem key={`dots-${index}`}>
-          <span className="px-2 text-gray-500">...</span>
-        </PaginationItem>
-      ) : (
-        <PaginationItem key={item}>
-          <PaginationLink
-            className={`!rounded border border-color-grey shadow-none 
-              hover:!text-black hover:bg-gray-200
-              ${item === page ? 'bg-primary text-white' : ''}`}
-            isActive={item === page}
-            onClick={() => setPage(item)}
-          >
-            {item}
-          </PaginationLink>
-        </PaginationItem>
-      )
-    );
-  };
+  const totalPages = Math.ceil(totalRecord / length) || 1
 
   return (
-    <Pagination className="mt-5 main-pagination">
-      <PaginationContent className="gap-2 cursor-pointer">
-        {/* Previous */}
+    <Pagination className='mt-5 main-pagination'>
+      <PaginationContent className='gap-2 cursor-pointer'>
+        {/* Previous Button */}
         <PaginationItem>
           <PaginationPrevious
             onClick={page > 1 ? () => setPage(page - 1) : undefined}
@@ -80,11 +37,24 @@ export const TablePagination = ({
           />
         </PaginationItem>
 
-        {/* Dynamic Pages */}
-        {renderPages()}
+        {/* Page Numbers */}
+        {Array.from({ length: totalPages }, (_, index) => (
+         <PaginationItem key={index}>
+         <PaginationLink
+           className={`!rounded border border-color-grey shadow-none 
+             hover:!text-black hover:bg-gray-200
+             ${index + 1 === page ? "bg-primary text-dark-color" : ""}`}
+           isActive={index + 1 === page}
+           onClick={() => setPage(index + 1)}
+         >
+           {index + 1}
+         </PaginationLink>
+       </PaginationItem>
+       
+        ))}
 
-        {/* Next */}
-        <PaginationItem>
+        {/* Next Button */}
+        <PaginationItem  >
           <PaginationNext
             onClick={page < totalPages ? () => setPage(page + 1) : undefined}
             className={
@@ -96,5 +66,5 @@ export const TablePagination = ({
         </PaginationItem>
       </PaginationContent>
     </Pagination>
-  );
-};
+  )
+}

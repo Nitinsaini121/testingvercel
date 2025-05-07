@@ -32,7 +32,7 @@ export function DataTable({
   })
   return (
     <>
-      <div className='rounded-6 border-color-grey custom-tabels border bg-white'>
+      <div className='rounded-6 border-color-grey custom-tabels border'>
         <Table>
           <TableHeader className='theme-bg-light-rgba'>
             {table?.getHeaderGroups().map(headerGroup => (
@@ -40,7 +40,7 @@ export function DataTable({
                 {headerGroup?.headers.map(header => (
                   <TableHead
                     key={header?.id}
-                    className='border-color-grey text-dark-color theme-bg-light-rgba px-3 py-4 text-sm'
+                    className='border-color-grey text-dark-color theme-bg-light-rgba border-b p-3 text-sm'
                   >
                     {header?.isPlaceholder
                       ? null
@@ -59,7 +59,7 @@ export function DataTable({
               <TableRow>
                 <TableCell
                   colSpan={columns?.length + 1}
-                  className='h-16 px-2 py-3 text-center'
+                  className='h-16 text-center'
                 >
                   <Spinner
                     size='lg'
@@ -71,7 +71,7 @@ export function DataTable({
               <TableRow>
                 <TableCell
                   colSpan={columns?.length + 1}
-                  className='h-24 px-2 py-3 text-center text-gray-500'
+                  className='h-24 text-center text-gray-500'
                 >
                   No result found
                 </TableCell>
@@ -85,7 +85,7 @@ export function DataTable({
                   {row?.getVisibleCells()?.map(cell => (
                     <TableCell
                       key={cell?.id}
-                      className='border-color-grey border-b px-2 py-3'
+                      className='border-color-grey border-b p-3'
                     >
                       {flexRender(
                         cell?.column?.columnDef?.cell,
@@ -99,6 +99,7 @@ export function DataTable({
           </TableBody>
         </Table>
       </div>
+
       <TablePagination
         totalRecord={totalRecord}
         page={page}

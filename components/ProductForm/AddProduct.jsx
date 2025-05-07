@@ -1,4 +1,5 @@
 'use client'
+import { toast } from '@/hooks/use-toast'
 import api from '@/lib/api'
 import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -7,27 +8,46 @@ import FormInputField from '../share/form/FormInputField'
 import FormSelectField from '../share/form/FormSelect'
 import ImageUpload from '../share/form/ImageUpload'
 import FormTextArea from '../share/form/TextArea'
+import VariationFormSelect from '../share/form/VariationFormSelect'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger
 } from '../ui/accordion'
+import { Button } from '../ui/button'
 import { CardDescription } from '../ui/card'
 import { Separator } from '../ui/separator'
 import TextEditor from '../work-order/TextEditor'
 import AddAttributes from './addProductAttributes'
 import CategoryListSideBar from './CategoryListSideBar'
+import { generateCombinations } from './VariationGenrate'
 
 const AddProductFields = ({
   form,
   onSaveAttribute,
   allAttributeList,
-  getListAttributes
+  getListAttributes,
+  attribute,
+  duplicateVari,
+  skuDuplicate,
+  missingPrice,
+  missingSku,
+  variationIndexRef,
+  setChnagedAttri,
+  changedAttri,
+  setChangedAttriLoad,
+  chnagedAttriLoad,
+  result
 }) => {
   const [manufacturer, setManufacturer] = useState([])
-  const [finalVariationData , setFinalVariationData]= useState([])
-  const { fields: variationFields, append: appendVariation } = useFieldArray({
+  const [dataVar, setDataVar] = useState([])
+
+  const {
+    fields: variationFields,
+    append: appendVariation,
+    remove: removeVariations
+  } = useFieldArray({
     control: form.control,
     name: 'variations'
   })
@@ -45,7 +65,7 @@ const AddProductFields = ({
   // Ensure at least one default field on load
   useEffect(() => {
     if (
-      variationFields.length === 0 &&
+      variationFields?.length === 0 &&
       form.getValues('variations')?.length === 0
     ) {
       appendVariation({
@@ -53,15 +73,13 @@ const AddProductFields = ({
         thumbnail: '',
         name: '',
         cost: '',
-        price: '',
         dynamic: '',
-        sku: '',
         id: ''
       })
     }
 
     if (
-      specField.length === 0 &&
+      specField?.length === 0 &&
       form.getValues('keySpecifications')?.length === 0
     ) {
       appendSpecField({
@@ -90,8 +108,110 @@ const AddProductFields = ({
     getManufacturer()
   }, [])
 
-  const variationData = JSON.parse(localStorage.getItem('variations'))
+  // Auto Generate All possible Variations handler : )
+  const autoGenerateVariations = (e, allDataAttribute) => {
+    e.preventDefault()
 
+    if (!allDataAttribute?.length) return
+    const allCombinations = generateCombinations(allDataAttribute, 'allgen')
+    const manuallyAddedVariationData =
+      JSON.parse(localStorage.getItem('variations')) || []
+
+    if (!manuallyAddedVariationData?.length) {
+      localStorage.setItem('variations', JSON.stringify(allCombinations))
+      for (let index = 0; index < allCombinations?.length; index++) {
+        variationIndexRef.current += 1
+      }
+      setDataVar(allCombinations)
+      return
+    }
+
+    const getVarationsValue = form.getValues('variations')
+    // compair logic :-
+
+    const unmatched = allCombinations.filter(item => {
+      const isMatched = getVarationsValue.some(matcher => {
+        return item.fieldData.every(field => {
+          return matcher[field.fieldName] === field.defaultValue
+        })
+      })
+      return !isMatched // keep only unmatched
+    })
+
+    const updatedVariations = [...manuallyAddedVariationData, ...unmatched]
+
+    for (let index = 0; index < unmatched?.length; index++) {
+      variationIndexRef.current += 1
+    }
+
+    // Step 5: Save updated list
+    localStorage.setItem('variations', JSON.stringify(updatedVariations))
+    setDataVar(updatedVariations)
+  }
+
+  // add Manually Variations Variations handler : )
+  const addManuallyVariations = (e, fullAttributes) => {
+    e.preventDefault()
+
+    if (!Array.isArray(fullAttributes)) return
+
+    // Step 1: Generate all combinations once
+    const allCombinations = generateCombinations(fullAttributes, 'manually')
+    const manuallyAddedVariationData =
+      JSON.parse(localStorage.getItem('variations')) || []
+    if (manuallyAddedVariationData?.length === allCombinations?.length) return
+
+    if (!allCombinations?.length) return
+
+    const currentIndex = variationIndexRef.current
+
+    // Step 2: Stop if all variations already added
+    if (currentIndex >= allCombinations?.length) {
+      console.log('All variations added.')
+      return
+    }
+
+    const nextVariation = allCombinations[currentIndex]
+
+    // Step 3: Get existing variations (from localStorage or state)
+    const existing = Array.isArray(variationData) ? variationData : []
+
+    // Step 4: Add new one without checking for duplicates
+    const updated = [...existing, nextVariation]
+    localStorage.setItem('variations', JSON.stringify(updated))
+    setDataVar(updated)
+
+    // Step 5: Move to next
+    variationIndexRef.current += 1
+  }
+
+  //handle Variation Delete : )
+  const handleVariationDelete = (e, index) => {
+    e.preventDefault()
+    const variationDataa = JSON.parse(localStorage.getItem('variations')) || []
+    const updatedVariations = variationDataa.filter((_, idx) => idx !== index)
+    variationIndexRef.current -= 1
+    setDataVar(updatedVariations)
+    removeVariations(index)
+    localStorage.setItem('variations', JSON.stringify(updatedVariations))
+  }
+
+  //for variation update render :)***
+  useEffect(() => {
+    console.log('Check', form.watch('variations'))
+  }, [dataVar])
+
+  useEffect(() => {
+    form.reset()
+  }, [form])
+
+  useEffect(() => {
+    variationIndexRef.current = 0
+  }, [])
+
+  const uomOptions = ['kg', 'm', 'pcs', 'box', 'liters']
+
+  const variationData = JSON.parse(localStorage.getItem('variations'))
 
   return (
     <>
@@ -124,152 +244,232 @@ const AddProductFields = ({
             getListAttributes={getListAttributes}
             allAttributeList={allAttributeList}
             onSaveAttribute={onSaveAttribute}
-            setFinalVariationData={setFinalVariationData}
+            removeVariations={removeVariations}
+            variationIndexRef={variationIndexRef}
+            setChnagedAttri={setChnagedAttri}
+            changedAttri={changedAttri}
+            chnagedAttriLoad={chnagedAttriLoad}
+            setChangedAttriLoad={setChangedAttriLoad}
           />
-
-         
 
           <Separator className='mt-8' />
           <CardDescription className='text-black-900 mb-3 mt-5 text-xl font-semibold'>
-            Add Variation
+            Variations
           </CardDescription>
 
-          {variationData?.map((field, index) => (
-            <Accordion key={index} type='single' collapsible className='w-full'>
-              <AccordionItem value={`${index}`}>
-                <div className='bg-gray-light mt-2 rounded border px-4 pb-2 pt-0'>
-                  <AccordionTrigger className='pb-0 pt-2'>
-                    <div className='flex gap-16'>
-                      {field?.map((f, i) => (
-                        <>
-                          <FormSelectField
-                            key={`${index}-${i}`}
-                            className='w-32 p-2'
-                            form={form}
-                            name={`variations.${index}.${f.fieldName}-${index}`}
-                            placeholder={f.fieldName}
-                            options={f.options}
-                          />
-                        </>
-                      ))}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className='mt-4 grid grid-cols-3 gap-x-4 gap-y-2'>
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.name`}
-                        label='Name'
-                        placeholder='Enter Name'
-                        type='text'
-                      />
-                      <ImageUpload
-                        form={form}
-                        name={`variations.${index}.featureImage`}
-                        label='Feature Image'
-                        className='border-color-grey h-12 rounded border bg-white py-3 !shadow-none'
-                      />
-                      <ImageUpload
-                        form={form}
-                        name={`variations.${index}.thumbnail`}
-                        label='Variation Thumbnail'
-                        className='border-color-grey h-12 rounded border bg-white py-3 !shadow-none'
-                      />
-                    </div>
-                    <div className='grid grid-cols-5 gap-4'>
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.price`}
-                        label='Price'
-                        placeholder='Enter Price'
-                        type='number'
-                      />
+          {!changedAttri && attribute?.length ? (
+            <div className='mb-3 flex gap-6'>
+              <Button
+                className='site-button mt-4'
+                onClick={e => autoGenerateVariations(e, attribute)}
+              >
+                Generate Variations
+              </Button>
+              <Button
+                className='site-button mt-4'
+                onClick={e => addManuallyVariations(e, attribute)}
+              >
+                Add Manually
+              </Button>
+            </div>
+          ) : (
+            ''
+          )}
 
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.cost`}
-                        label='Cost'
-                        placeholder='Enter Cost'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.sku`}
-                        label='SKU'
-                        placeholder='Enter SKU'
-                        type='text'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.coverageAreaSqft`}
-                        label='Coverage Area Sq ft'
-                        placeholder='Enter Coverage Area'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.unitsPerSq`}
-                        label='Units Per Sq'
-                        placeholder='Enter Units Per Sq'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.bundlesPerLf`}
-                        label='Bundles Per Lf'
-                        placeholder='Enter Bundles Per Lf'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.lf`}
-                        label='Lf'
-                        placeholder='Enter Lf'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.eaPerUnit`}
-                        label='Ea Per Unit'
-                        placeholder='Enter Ea Per Unit'
-                        type='number'
-                      />
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.rollSqft`}
-                        label='Roll Sq ft'
-                        placeholder='EnterRoll Sq ft'
-                        type='number'
-                      />
-                       <FormInputField
-                        form={form}
-                        name={`variations.${index}.rollLengthFt`}
-                        label='Roll Length Ft'
-                        placeholder='Enter Roll Length Ft'
-                        type='number'
-                      />
-                       <FormInputField
-                        form={form}
-                        name={`variations.${index}.rollWidthIn`}
-                        label='Roll Width In'
-                        placeholder='Enter Roll Width In'
-                        type='number'
-                      />
-                    </div>
-                    <div className='select-default mt-2 flex justify-between'>
-                 
-                      <FormInputField
-                        form={form}
-                        name={`variations.${index}.variationId`}
-                        placeholder='Enter id'
-                        type='hidden'
-                      />
-                    </div>
-                  </AccordionContent>
-                </div>
-              </AccordionItem>
-            </Accordion>
-          ))}
+          {variationData?.length ? (
+            <>
+              {duplicateVari && (
+                <span className='text-red-600'>
+                  {' '}
+                  Duplicate variation value,
+                </span>
+              )}
+              {skuDuplicate && (
+                <span className='text-red-600'> SKU value is Duplicate,</span>
+              )}
+            </>
+          ) : null}
+
+          {variationData?.map((field, index) => {
+            return (
+              <Accordion
+                key={field?.mainId}
+                type='single'
+                collapsible
+                className='w-full'
+              >
+                <AccordionItem value={`${field?.mainId}`}>
+                  <div
+                    className={
+                      form?.formState?.errors?.variations?.some(
+                        (_, i) => i == index
+                      )
+                        ? 'g-gray-light mt-2 w-full rounded border border-red-700 px-4 pb-2 pt-0'
+                        : 'g-gray-light mt-2 w-full rounded border px-4 pb-2 pt-0'
+                    }
+                    // className='bg-gray-light mt-2 rounded border px-4 pb-2 pt-0'
+                  >
+                    <AccordionTrigger className='pb-0 pt-2'>
+                      <span>#ID{field?.mainId}</span>
+                      <div className='flex gap-16'>
+                        {field?.fieldData?.map((f, i) => {
+                          return (
+                            <>
+                              <VariationFormSelect
+                                key={`${index}-${i}`}
+                                className='w-32 p-2'
+                                form={form}
+                                name={`variations.${index}.${f.fieldName}`}
+                                placeholder={f.fieldName}
+                                options={f.options}
+                                defaultValue={f?.defaultValue}
+                              />
+                            </>
+                          )
+                        })}
+                        <Button
+                          className='mt-3 w-8 bg-red-600 p-2'
+                          onClick={e =>
+                            handleVariationDelete(e, index, field.mainId)
+                          }
+                        >
+                          X
+                        </Button>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className='mt-4 grid grid-cols-3 gap-x-4 gap-y-2'>
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.name`}
+                          label='Name'
+                          placeholder='Enter Name'
+                          type='text'
+                        />
+                        <ImageUpload
+                          form={form}
+                          name={`variations.${index}.featureImage`}
+                          label='Feature Image'
+                          className='border-color-grey h-12 rounded border bg-white py-3 !shadow-none'
+                        />
+                        <ImageUpload
+                          form={form}
+                          name={`variations.${index}.thumbnail`}
+                          label='Variation Thumbnail'
+                          className='border-color-grey h-12 rounded border bg-white py-3 !shadow-none'
+                        />
+                      </div>
+                      <div className='grid grid-cols-5 gap-4'>
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.quantity`}
+                          label='Qty'
+                          placeholder='Enter Qty'
+                          type='number'
+                        />
+
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.cost`}
+                          label='Cost'
+                          placeholder='Enter Cost'
+                          type='number'
+                        />
+                        <FormSelectField
+                      className='!mt-7 h-10'
+                      form={form}
+                      name={`variations.${index}.uom`}
+                      placeholder='UOM'
+                      options={uomOptions.map(uom => ({
+                        label: uom,
+                        value: uom
+                      }))}
+                    />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.sku`}
+                          label='SKU'
+                          placeholder='Enter SKU'
+                          options={uomOptions.map(uom => ({
+                            label: uom,
+                            value: uom
+                          }))}                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.coverageAreaSqft`}
+                          label='Area Sq ft'
+                          placeholder='Enter Coverage Area'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.unitsPerSq`}
+                          label='Units Per Sq'
+                          placeholder='Enter Units Per Sq'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.bundlesPerLf`}
+                          label='Bundles Per Lf'
+                          placeholder='Enter Bundles Per Lf'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.lf`}
+                          label='Lf'
+                          placeholder='Enter Lf'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.eaPerUnit`}
+                          label='Ea Per Unit'
+                          placeholder='Enter Ea Per Unit'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.rollSqft`}
+                          label='Roll Sq ft'
+                          placeholder='EnterRoll Sq ft'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.rollLengthFt`}
+                          label='Roll Length Ft'
+                          placeholder='Enter Roll Length Ft'
+                          type='number'
+                        />
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.rollWidthIn`}
+                          label='Roll Width In'
+                          placeholder='Enter Roll Width In'
+                          type='number'
+                        />
+                      </div>
+                      <div className='select-default mt-2 flex justify-between'>
+                        {/* <FormCheckBox
+              form={form}
+              name={`variations.${index}.default`}
+              description='Select Default'
+            /> */}
+                        <FormInputField
+                          form={form}
+                          name={`variations.${index}.variationId`}
+                          placeholder='Enter id'
+                          type='hidden'
+                        />
+                      </div>
+                    </AccordionContent>
+                  </div>
+                </AccordionItem>
+              </Accordion>
+            )
+          })}
 
           <Separator className='mb-6 mt-8' />
           <CardDescription className='text-black-900 mb-3 mt-5 text-xl font-semibold'>
@@ -352,7 +552,7 @@ const AddProductFields = ({
                 >
                   <Plus className='text-light-color h-5 w-5 text-orange-500' />
                 </div>
-                {specField.length > 1 && (
+                {specField?.length > 1 && (
                   <div
                     className='flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-red-500'
                     onClick={() => removespec(index)}

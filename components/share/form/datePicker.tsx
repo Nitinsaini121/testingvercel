@@ -24,21 +24,19 @@ interface FormDatePickerProps<T extends FieldValues> {
   name: Path<T>
   form: UseFormReturn<T>
   label: string
-  disabled?: (date: Date) => boolean
-  className: string
+  disabled?: (date: Date) => boolean 
 }
 
 const FormDatePicker = <T extends FieldValues>({
   name,
   form,
   label,
-  disabled,
-  className
+  disabled
 }: FormDatePickerProps<T>) => {
   const [open, setOpen] = useState(false)
   return (
     <FormField
-      control={form?.control}
+      control={form.control}
       name={name}
       render={({ field }) => (
         <FormItem>
@@ -50,12 +48,11 @@ const FormDatePicker = <T extends FieldValues>({
                   variant='outline'
                   onClick={() => setOpen(prev => !prev)}
                   className={cn(
-                    `border-color-grey shadow-none', !field.value && 'text-muted-foreground h-12 w-full rounded pl-3 text-left font-normal ${className}`
+                    'w-full pl-3 text-left font-normal h-12 rounded border-color-grey !shadow-none',
+                    !field.value && 'text-muted-foreground'
                   )}
                 >
-                  {field?.value && !isNaN(new Date(field?.value).getTime())
-                    ? format(new Date(field?.value), 'dd/MM/yyyy')
-                    : 'Pick a date'}
+                  {field?.value ? format(field?.value, 'dd/MM/yyyy') : 'Pick a date'}
                   <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
                 </Button>
               </FormControl>
@@ -69,7 +66,7 @@ const FormDatePicker = <T extends FieldValues>({
                   field.onChange(date)
                   setOpen(false)
                 }}
-                disabled={disabled}
+                disabled={disabled  }
                 initialFocus
               />
             </PopoverContent>

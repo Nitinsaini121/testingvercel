@@ -19,15 +19,16 @@ interface Option {
   label: string
   value: string
   icon?: React.ElementType
-  disabled?: boolean
+  disabled?: boolean // ✅ ADD THIS LINE HERE
 }
+
 
 interface FormSelectFieldProps<T extends FieldValues> {
   name: Path<T>
   form: UseFormReturn<T>
   label: string
   placeholder?: string
-  options: Option[]
+  options: Option[] // Accepts an array of options
   className?: string
   disabled?: boolean
 }
@@ -38,26 +39,22 @@ const FormSelectField = <T extends FieldValues>({
   label,
   className,
   placeholder = 'Select an option',
-  options,
-  disabled
+  options
 }: FormSelectFieldProps<T>) => {
   return (
     <FormField
-      control={form?.control}
+      control={form.control}
       name={name}
-      render={({ field, fieldState }) => (
+      render={({ field }) => (
         <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
+          <FormLabel>{label}</FormLabel>
           <Select
             value={field.value || ''}
             onValueChange={field.onChange}
             defaultValue={field.value}
-            disabled={disabled}
           >
             <FormControl
-              className={`border-color-grey h-12 rounded !bg-white !shadow-none ${
-                fieldState.error ? 'border-red-500' : ''
-              } ${className}`}
+              className={`border-color-grey h-12 rounded !bg-white !shadow-none ${className}`}
             >
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />
@@ -65,25 +62,27 @@ const FormSelectField = <T extends FieldValues>({
             </FormControl>
             <SelectContent>
               {options?.map(option => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  disabled={option.disabled}
-                >
-                  {option.icon ? (
-                    <>
-                      <option.icon className='mr-2 inline h-5 w-5' />
-                      {option.label}
-                    </>
-                  ) : (
-                    option.label
-                  )}
-                </SelectItem>
+                <>
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    disabled={option.disabled}
+                  >
+                    {option.icon ? (
+                      <>
+                        <option.icon className='mr-2 inline h-5 w-5' />
+                        {option.label}
+                      </>
+                    ) : (
+                      option.label
+                    )}
+                  </SelectItem>
+                </>
               ))}
             </SelectContent>
           </Select>
-          <FormMessage />
           <FormDescription />
+          <FormMessage />
         </FormItem>
       )}
     />

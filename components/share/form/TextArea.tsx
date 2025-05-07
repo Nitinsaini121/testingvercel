@@ -32,7 +32,7 @@ const FormTextArea = <T extends FieldValues>({
   const errorMessage = errors?.[name]?.message as string | undefined
   return (
     <FormField
-      control={form?.control}
+      control={form.control}
       name={name}
       render={({ field, fieldState }) => {
         return (

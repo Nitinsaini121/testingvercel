@@ -37,13 +37,13 @@ const Navbar = () => {
       <Card className='theme-bg container m-auto flex items-center justify-between px-6 py-4'>
         {/* Logo */}
         <div className='text-2xl font-bold text-primary'>
-          {/* <Link href='/'>
+          <Link href='/'>
             <img
               src='/images/fortress-logo.png'
               alt='Roofing Product'
               className='h-20 w-full object-cover'
             />
-          </Link> */}
+          </Link>
         </div>
         {/* Nav Items */}
         <ul className='hidden items-center gap-6 font-medium text-white md:flex'>
@@ -51,7 +51,7 @@ const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <span className='flex cursor-pointer items-center gap-1'>
-                About <ChevronDown />
+                  Roofing Pros <ChevronDown />
                 </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -67,7 +67,7 @@ const Navbar = () => {
             </DropdownMenu>
           </li>
           <li>
-            <a href='/'>Contact</a>
+            <a href='/catalog'>Catalog</a>
           </li>
           <li>
             <DropdownMenu>

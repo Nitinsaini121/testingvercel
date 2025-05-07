@@ -1,11 +1,11 @@
 'use client'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { QuotesValidation } from '../form-validations/Quotes-Validation'
-import DimensionService from '../../services/dimension-Service'
-import ProductQuote from '../../services/ProductQuote'
+import DimensionService from '../services/dimension-Service'
+import ProductQuote from '../services/ProductQuote'
 import { errorMessage, successMessage } from '../ToasterMessage'
 import { Button } from '../ui/button'
 import {
@@ -29,6 +29,7 @@ const ProductCatogriesSection = ({
   setSendValue
 }) => {
   const searchParam = useSearchParams()
+  const router = useRouter()
   const leadId = searchParam.get('id')
   const [data, setData] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
@@ -89,15 +90,20 @@ const ProductCatogriesSection = ({
     const subscription = form.watch((value, { name }) => {
       if (!name?.startsWith('quotes.')) return
 
-      const match = name.match(/^quotes\.(\d+)\.(cost|margin|quantity)$/)
+      const match = name.match(/^quotes\.(\d+)\.(cost|margin|quantity|waste)$/)
+
       if (match) {
         const index = Number(match[1])
         const quote = form.getValues(`quotes.${index}`)
         const cost = Number(quote.cost || 0)
         const margin = Number(quote.margin || 0)
         const quantity = Number(quote.quantity || 0)
-        const price = cost + margin
-        const total = price * quantity
+        const waste = Number(quote.waste || 0)
+        const wastePercent = waste / 100
+        const qtyWithWaste = quantity / (1 - wastePercent)
+        const inPerMargin = margin / 100
+        const price = cost / (1 - inPerMargin)
+        const total = price * quantity + qtyWithWaste
 
         form.setValue(`quotes.${index}.price`, price, {
           shouldValidate: false,
@@ -107,6 +113,36 @@ const ProductCatogriesSection = ({
           shouldValidate: false,
           shouldDirty: false
         })
+
+        // if (waste > 0) {
+        //   const wastePercent = waste / 100
+        //   const qtyWithWaste = quantity / (1 - wastePercent)
+        //   const inPerMargin = margin / 100
+        //   const price = cost / (1 - inPerMargin)
+        //   const total = price * qtyWithWaste
+
+        //   form.setValue(`quotes.${index}.price`, qtyWithWaste, {
+        //     shouldValidate: false,
+        //     shouldDirty: false
+        //   })
+        //   form.setValue(`quotes.${index}.total`, total, {
+        //     shouldValidate: false,
+        //     shouldDirty: false
+        //   })
+        // } else {
+        // const inPerMargin = margin / 100
+        // const price = cost / (1 - inPerMargin)
+
+        // const total = price * quantity
+        // form.setValue(`quotes.${index}.price`, price, {
+        //   shouldValidate: false,
+        //   shouldDirty: false
+        // })
+        // form.setValue(`quotes.${index}.total`, total, {
+        //   shouldValidate: false,
+        //   shouldDirty: false
+        // })
+        // }
       }
     })
 
@@ -114,7 +150,6 @@ const ProductCatogriesSection = ({
   }, [form])
 
   const onSubmitQuotes = async data => {
-    console.log('data1111', data)
     const formData = {
       materialQuality: checkMaterial || sendValue,
       leadId: Number(leadId),
@@ -136,6 +171,7 @@ const ProductCatogriesSection = ({
             setEditId(null)
             setEditData()
             setSendValue()
+            router.push('/dashboard/product/material-quotes')
           } else {
             errorMessage({ description: response?.data?.message })
           }
@@ -156,6 +192,7 @@ const ProductCatogriesSection = ({
             fetchTakeOfData()
             setOpenDialog(false)
             form.reset()
+            router.push('/dashboard/product/material-quotes')
           } else {
             errorMessage({ description: response?.data?.message })
           }
@@ -171,20 +208,29 @@ const ProductCatogriesSection = ({
   const handleClick = status => {
     setCheckMaterial(status)
   }
-  // const checkMaterial = form.watch('material_quality')
+
   useEffect(() => {
     if (!data.length || !checkMaterial) return
 
     const updatedQuotes = data.map(category => {
-      const selectedProductId = category[checkMaterial]
-      const defaultProduct =
-        category.products.find(item => item.variationId === selectedProductId) || null
+      const selectedProductId = category?.[checkMaterial]
+      const defaultProduct = category.products.find(
+        item => item.variationId === selectedProductId
+      )
+
+      const product =
+        defaultProduct ||
+        category.products.find(
+          item => item.variationId === category?.default_product
+        ) ||
+        category.products[0] ||
+        null
+
+      console.log('category', category)
       return {
         categoryId: category.id,
         categoryName: category.name,
-        productId: String(
-          defaultProduct?.id ?? category?.default_product ?? ''
-        ),
+        productId: String(product?.variationId || ''),
         description: '',
         cost: '',
         margin: '',
@@ -194,6 +240,34 @@ const ProductCatogriesSection = ({
         total: ''
       }
     })
+
+    // const updatedQuotes = data.map(category => {
+    //   const selectedProductId = category[checkMaterial]
+    //   console.log('selectedProductId', selectedProductId)
+    //   console.log(
+    //     'category',
+    //     category.products.map(item => item.productId)
+    //   )
+    //   const defaultProduct =
+    //     category.products.find(
+    //       item => item.productId === selectedProductId
+    //     ) || null
+
+    //   return {
+    //     categoryId: category.id,
+    //     categoryName: category.name,
+    //     productId: String(
+    //       defaultProduct?.id ?? category?.default_product ?? ''
+    //     ),
+    //     description: '',
+    //     cost: '',
+    //     margin: '',
+    //     price: '',
+    //     quantity: '1',
+    //     uom: '',
+    //     total: ''
+    //   }
+    // })
 
     form.setValue('quotes', updatedQuotes)
   }, [checkMaterial, data])
@@ -220,7 +294,6 @@ const ProductCatogriesSection = ({
         }))
       })
       setOpenDialog(true)
-      console.log('editData', editData)
     }
   }, [editData, editId, grandTotal])
 

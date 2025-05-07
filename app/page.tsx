@@ -1,32 +1,22 @@
 "use client"
-
-import { redirect, useRouter } from 'next/navigation'
-
-import useDocumentTitle from '@/components/utils/useDocumentTitle'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { useEffect } from 'react'
+import { getServerSession } from 'next-auth'
+import { redirect, useRouter } from 'next/navigation'
+import Home from './catalog-view/page'
+import useDocumentTitle from '@/components/utils/useDocumentTitle'
 
-export default  function AdminPage () {
+export default  function AdminPage() {
+  // const session = await getServerSession(authOptions)
 
-  // const redirectUser =async()=>{
-  //   const session = await getServerSession(authOptions)
-    
-  //     if (session?.user) {
-  //       redirect('/login')
-  //     }
-    
-  //     redirect('/catalog-view')
-
+  // if (session?.user) {
+  //   redirect('/login')
   // }
 
-
-  useEffect(()=>{
-    redirect('/login')
-  },[])
+  // redirect('/catalog-view')
   const router = useRouter()
   useDocumentTitle('Home')
+  router.replace('/catalog')
   return (<>
-Home page
+  <Home />
   </>)
 }

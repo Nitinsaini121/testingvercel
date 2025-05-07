@@ -22,7 +22,8 @@ const AtributeFormMultipleSelect = ({
   label,
   placeholder = 'Select options',
   options,
-  fieldValue
+  fieldValue,
+  setChangedAttriLoad
 }) => {
   const [open, setOpen] = useState(false)
   const [defaultValues, setDefaultValues] = useState([])
@@ -81,9 +82,10 @@ const AtributeFormMultipleSelect = ({
                     className='flex cursor-pointer items-center space-x-2 rounded p-2 hover:bg-gray-100'
                     onClick={() => {
                       const newValue = selectedValues.includes(option.value)
-                        ? selectedValues.filter(val => val !== option.value)
-                        : [...selectedValues, option.value]
+                      ? selectedValues.filter(val => val !== option.value)
+                      : [...selectedValues, option.value]
                       field.onChange(newValue)
+                      setChangedAttriLoad(true)
                     }}
                   >
                     <Checkbox checked={selectedValues.includes(option.value)} />

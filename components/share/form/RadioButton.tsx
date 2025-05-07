@@ -26,34 +26,30 @@ const RadioButton = <T extends FieldValues>({
 }: RadioButtonProps<T>) => {
   return (
     <FormField
-      control={form?.control}
+      control={form.control}
       name={name}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <FormControl
-            className={`radio-collunm !mb-5 !flex-row !flex-nowrap gap-4`}
-          >
+          <FormControl className={`!flex-nowrap !flex-row !mb-5 gap-4 radio-collunm`}>
             <RadioGroup
-              onValueChange={value => {
-                field.onChange(value)
-                onChange?.(value)
+              onValueChange={(value) => {
+                field.onChange(value) 
+                onChange?.(value) 
               }}
-              value={field.value}
-              className='flex flex-col justify-center space-y-1'
+              value={field.value} 
+              className='flex flex-col space-y-1'
             >
-              {options?.map(option => (
+              {options?.map((option) => (
                 <FormItem
                   key={option.value}
-                  className='radio-btn !mt-0 flex items-center justify-center space-x-3 space-y-0'
+                  className='flex items-center space-x-3 space-y-0 !mt-0 radio-btn'
                 >
                   <FormControl>
-                    <RadioGroupItem className='border-gray-500' value={option.value} />
+                    <RadioGroupItem value={option.value} />
                   </FormControl>
-                  <FormLabel className='!ml-2 font-normal'>
-                    {option.label}
-                  </FormLabel>
-                </FormItem>   
+                  <FormLabel className='font-normal !ml-2'>{option.label}</FormLabel>
+                </FormItem>
               ))}
             </RadioGroup>
           </FormControl>

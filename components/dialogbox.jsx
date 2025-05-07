@@ -39,7 +39,7 @@ export function DialogDemo() {
           </div>
         </div>
         <DialogFooter>
-          <Button type='submit '>Save changes</Button>
+          <Button type='submit'>Save changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

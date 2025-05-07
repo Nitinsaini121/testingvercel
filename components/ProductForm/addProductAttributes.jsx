@@ -1,9 +1,10 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Trash2 } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { ProductAttributeValidationSchema } from '../form-validations/product-Attributevalidation'
-import AttributeServices from '../../services/attribute-api'
+import AttributeServices from '../services/attribute-api'
 import AtributeFormMultipleSelect from '../share/form/AtributeFormMultipleSelect'
 import FormInputField from '../share/form/FormInputField'
 import FormSelectField from '../share/form/FormSelect'
@@ -11,12 +12,21 @@ import { errorMessage } from '../ToasterMessage'
 import { Button } from '../ui/button'
 import { Form } from '../ui/form'
 
-const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
+const AddAttributes = ({
+  onSaveAttribute,
+  removeVariations,
+  variationIndexRef,
+  setChnagedAttri,
+  changedAttri,
+  setChangedAttriLoad,
+  chnagedAttriLoad
+}) => {
   const [Attribute, setAttributeOptions] = useState([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [attributeListValue, setAttributeValue] = useState([])
   const [atributeFieldNameLength, setAtributeFieldNameLength] = useState()
 
+  const pathname = usePathname()
   let newOptions = []
   const form = useForm({
     defaultValues: {
@@ -53,10 +63,15 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
   }, [])
 
   const selectedExisting = form.watch('addExisting')
+  console.log('attributes', form.watch('attributes'))
+  // console.log("changedAttri",changedAttri)
 
   // Handle adding existing value
   useEffect(() => {
     if (selectedExisting) {
+      console.log('selectedExisting', selectedExisting)
+      localStorage.setItem('attributeChanged', JSON.stringify(true))
+
       const existingAttribute = Attribute.find(
         attr => attr.name === selectedExisting
       )
@@ -97,6 +112,7 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
     localStorage?.getItem('oldAtributeData')
   )
 
+  // for atribute field append with data :)
   useEffect(() => {
     if (localDataAttribute !== 0) {
       localDataAttribute?.forEach(item => {
@@ -122,79 +138,43 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
         }
       })
     }
-    setAtributeFieldNameLength(attribute.length)
-  }, [Attribute, appendAttribute, form])
+    setAtributeFieldNameLength(attribute?.length)
+  }, [Attribute])
 
+  // for atribute field delete :)
   useEffect(() => {
-    if (!attribute || attribute.length === 0) {
+    if (!attribute || attribute?.length === 0) {
       localStorage.removeItem('variations')
-      setFinalVariationData([]) // Optional: clear state if attributes are empty
       return
     }
-
-    const formattedCombinations = generateCombinations(attribute)
-    localStorage.setItem('variations', JSON.stringify(formattedCombinations))
-    // form.reset()
-    setFinalVariationData(formattedCombinations)
+    // const formattedCombinations = generateCombinations(attribute , "not")
+    // localStorage.setItem('variations', JSON.stringify(formattedCombinations))
   }, [attribute])
 
-  const generateCombinations = attributes => {
-    const result = []
-
-    const getCombinations = (index, current) => {
-      if (index === attributes?.length) {
-        result.push([...current])
-        return
-      }
-
-      if (
-        !attributes[index] ||
-        !attributes[index].name ||
-        !Array.isArray(attributes[index].value)
-      ) {
-        console.error('errrror', index, attributes[index])
-        return
-      }
-
-      attributes[index].value.forEach(val => {
-        const newCurrent = [...current]
-
-        if (
-          !newCurrent.some(item => item.fieldName === attributes[index].name)
-        ) {
-          newCurrent.push({
-            fieldName: attributes[index].name,
-            options: attributes[index].value.map(v => ({ label: v, value: v }))
-          })
-        }
-
-        getCombinations(index + 1, newCurrent)
-      })
-    }
-
-    getCombinations(0, [])
-    return result
+  const handleAtrubuteRemove = index => {
+    removeAttribute(index)
+    removeVariations()
+    variationIndexRef.current = 0
+    // setChnagedAttri(true)
+    localStorage.setItem('attributeChanged', JSON.stringify(true))
   }
+
+  const changedAttrii = useWatch({
+    control: form.control,
+    name: 'attributes'
+  })
+
+  useEffect(() => {
+    if (chnagedAttriLoad !== null) {
+      setChnagedAttri(true)
+    }
+  }, [changedAttrii, chnagedAttriLoad, setChnagedAttri])
+
   return (
     <>
       <Form {...form}>
         <form>
           <div className='flex items-center justify-start gap-4'>
-            {/* Add New Button */}
-            {/* <Button
-              type='button'
-              onClick={() => {
-                appendAttribute({
-                  name: '',
-                  value: []
-                })
-                setIsFormOpen(true) // Open form when adding new attribute
-              }}
-              className='w-24'
-            >
-              Add new
-            </Button> */}
-
             {/* Select Existing Dropdown */}
             <FormSelectField
               className='h-12 w-96'
@@ -229,6 +209,7 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
                   form={form}
                   name={`attributes.${index}.value`}
                   placeholder='Enter value'
+                  setChangedAttriLoad={setChangedAttriLoad}
                   label='Value'
                   options={
                     attributeListValue
@@ -244,28 +225,12 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
                   }
                   fieldValue={form.getValues(`attributes.${index}.name`)}
                 />
-                {/* {attribute?.length && (
+                {!pathname.includes('/edit') && attribute?.length && (
                   <div className='relative top-3 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-red-500'>
                     <Trash2
                       type='button'
                       className='h-5 w-5 text-white'
-                      onClick={() => removeAttribute(index)}
-                    />
-                  </div>
-                )} */}
-
-                {attribute?.length > 0 && (
-                  <div className='relative top-3 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-red-500'>
-                    <Trash2
-                      type='button'
-                      className='h-5 w-5 text-white'
-                      onClick={() => {
-                        const currentAttributes =
-                          form.getValues('attributes') || []
-                        currentAttributes.splice(index, 1)
-                        form.setValue('attributes', currentAttributes)
-                        removeAttribute(index)
-                      }}
+                      onClick={() => handleAtrubuteRemove(index)}
                     />
                   </div>
                 )}
@@ -282,6 +247,11 @@ const AddAttributes = ({ onSaveAttribute, setFinalVariationData }) => {
             >
               Save Attributes
             </Button>
+          ) : (
+            ''
+          )}
+          {changedAttri && attribute?.length ? (
+            <span className='pl-20 text-yellow-600'> Save New Attributes! </span>
           ) : (
             ''
           )}

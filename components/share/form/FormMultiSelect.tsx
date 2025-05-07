@@ -55,7 +55,7 @@ const FormMultiSelectField = <T extends FieldValues>({
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
-                  className='border-color-grey h-12 w-full justify-between whitespace-normal rounded font-normal !shadow-none'
+                  className=' h-12 w-full justify-between whitespace-normal rounded border-color-grey !shadow-none font-normal'
                 >
                   {selectedValues.length > 0
                     ? options
@@ -88,10 +88,13 @@ const FormMultiSelectField = <T extends FieldValues>({
             </Popover>
             <FormDescription />
             <FormMessage>
-              {typeof form.formState.errors[name]?.message === 'string'
-                ? form.formState.errors[name]?.message
-                : ''}
-            </FormMessage>
+  {typeof form.formState.errors[name]?.message === 'string'
+    ? form.formState.errors[name]?.message
+    : ''}
+</FormMessage>
+
+
+
           </FormItem>
         )
       }}

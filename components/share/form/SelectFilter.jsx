@@ -28,7 +28,7 @@ const SelectFilter = ({
   form,
   placeholder,
   label,
-  options,
+  userList,
   disabled,
   className
 }) => {
@@ -56,27 +56,25 @@ const SelectFilter = ({
                   )}
                 >
                   {field.value
-                    ? options.find(item => item.value === field.value)?.label
+                    ? userList.find(item => item.value === field.value)?.label
                     : placeholder}
-                  <ChevronsUpDown className='ml-2 h-4 w-4 opacity-50' />
+                  <ChevronsUpDown className='opacity-50 ml-2 h-4 w-4' />
                 </Button>
               </FormControl>
             </PopoverTrigger>
 
             <PopoverContent className='w-[200px] p-0'>
               <Command>
-                <CommandInput placeholder='Search ...' className='h-9' />
+                <CommandInput placeholder='Search user...' className='h-9' />
                 <CommandList>
                   <CommandEmpty>No Item found.</CommandEmpty>
                   <CommandGroup>
-                    {options?.map(item => (
+                    {userList?.map(item => (
                       <CommandItem
                         key={item.value}
                         value={item?.label?.toLowerCase()}
                         onSelect={() => {
-                          form.setValue(name, item.value, {
-                            shouldValidate: true
-                          }) // 🔥 triggers validation
+                          form.setValue(name, item.value, { shouldValidate: true }) // 🔥 triggers validation
                           setOpen(false)
                         }}
                       >

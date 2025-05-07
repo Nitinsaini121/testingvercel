@@ -1,5 +1,4 @@
 'use client'
-
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,31 +32,29 @@ interface NavMainProps {
     items?: {
       title: string
       url: string
-      items?: {
-        title: string
-        url: string
-      }[]
     }[]
   }[]
 }
 
 export default function NavMain({ homeItem, items }: NavMainProps) {
   const pathname = usePathname()
-  const [openSection, setOpenSection] = useState<string | null>(null)
-
   const isActiveUrl = (url: string) => {
-    if (url === '/dashboard') return pathname === url
-    return pathname.startsWith(url)
+    if (url === '/dashboard') return pathname === url // Exact match for Home
+    return pathname.startsWith(url) // Parent & child pages stay active
   }
 
   const isParentActive = (title: string, url: string) =>
     openSection === title || pathname.startsWith(url)
 
+  // State for open section - initially null to prevent hydration issues
+  const [openSection, setOpenSection] = useState<string | null>(null)
   useEffect(() => {
+    // Load from localStorage after the component mounts (client-side)
     const storedSection = localStorage.getItem('openSection')
     if (storedSection) setOpenSection(storedSection)
   }, [])
 
+  // Function to ensure only one section stays open
   const toggleSection = (title: string) => {
     setOpenSection(prev => {
       const newState = prev === title ? null : title
@@ -123,6 +120,7 @@ export default function NavMain({ homeItem, items }: NavMainProps) {
                     >
                       {item.icon && <item.icon />}
                     </span>
+
                     <span>{item.title}</span>
                     <ChevronRight
                       className={cn(
@@ -132,58 +130,25 @@ export default function NavMain({ homeItem, items }: NavMainProps) {
                     />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
-
                 <CollapsibleContent>
                   <SidebarMenuSub className='sub-menu-item px-2 py-2'>
                     {item.items?.map(subItem => (
-                      <SidebarMenuSubItem key={subItem.title} className='relative py-1'>
-                        {subItem.items ? (
-                          <Collapsible asChild>
-                            <>
-                              <CollapsibleTrigger asChild>
-                                <SidebarMenuSubButton className='font-normal theme-text-color !rounded'>
-                                  <div className='flex justify-between items-center w-full'>
-                                    <span>{subItem.title}</span>
-                                    <ChevronRight className='ml-auto transition-transform duration-200' />
-                                  </div>
-                                </SidebarMenuSubButton>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent className='pl-4'>
-                                <SidebarMenuSub className='m-0 border-none sub-menu-ul'>
-                                  {subItem.items.map(thirdItem => (
-                                    <SidebarMenuSubItem key={thirdItem.title} className='relative py-1'>
-                                      <SidebarMenuSubButton
-                                        asChild
-                                        className={cn(
-                                          'theme-text-color !rounded font-normal hover:text-sidebar-primary active:text-sidebar-primary',
-                                          isActiveUrl(thirdItem.url) &&
-                                            'font-normal text-sidebar-primary'
-                                        )}
-                                      >
-                                        <Link href={thirdItem.url}>
-                                          <span>{thirdItem.title}</span>
-                                        </Link>
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  ))}
-                                </SidebarMenuSub>
-                              </CollapsibleContent>
-                            </>
-                          </Collapsible>
-                        ) : (
-                          <SidebarMenuSubButton
-                            asChild
-                            className={cn(
-                              'theme-text-color !rounded font-normal hover:text-sidebar-primary active:text-sidebar-primary',
-                              isActiveUrl(subItem.url) &&
-                                'font-normal text-sidebar-primary'
-                            )}
-                          >
-                            <Link href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        )}
+                      <SidebarMenuSubItem
+                        key={subItem.title}
+                        className='relative py-1'
+                      >
+                        <SidebarMenuSubButton
+                          asChild
+                          className={cn(
+                            'theme-text-color !rounded font-normal hover:text-sidebar-primary active:text-sidebar-primary',
+                            isActiveUrl(subItem.url) &&
+                              'font-normal text-sidebar-primary'
+                          )}
+                        >
+                          <Link href={subItem.url}>
+                            <span>{subItem.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
                   </SidebarMenuSub>

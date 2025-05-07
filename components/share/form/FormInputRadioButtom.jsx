@@ -16,8 +16,7 @@ const FormRadioButton = ({
   form,
   label,
   options,
-  onChange,
-  className
+  onChange
 }) => {
   return (
     <FormField
@@ -33,7 +32,7 @@ const FormRadioButton = ({
                 onChange?.(value) 
               }}
               value={field.value} 
-              className={`flex flex-col space-y-1${className}`}
+              className='flex flex-col space-y-1'
             >
               {options?.map((option) => (
                 <FormItem

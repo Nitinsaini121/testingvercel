@@ -23,7 +23,23 @@ const UserContextProvider: React.FC<UserContextProviderProps> = ({
   const [catalog, setCatalog] = useLocalStorage('catalog', [])
   const [breadcrumbData, setBreadCrumbsData] = useState()
   const [getRegions, setRegions] = useState<string[]>([])
-  
+  // fetch api for contractor regions
+  const fetchData = async () => {
+    try {
+      const getAllRegions = await api.get(`contract/getAllContractRegion`)
+      setRegions(getAllRegions?.data?.data)
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch contract regions.'
+      })
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
   return (
     <UserContext.Provider
       value={{

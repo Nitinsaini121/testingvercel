@@ -7,8 +7,17 @@ import {
   SidebarRail,
   useSidebar
 } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
 import { DocumentTextIcon } from '@heroicons/react/24/outline'
-import { HomeIcon, User } from 'lucide-react'
+import {
+  Contact,
+  Factory,
+  FileText,
+  HomeIcon,
+  LayoutGrid,
+  Settings,
+  UsersIcon
+} from 'lucide-react'
 import Link from 'next/link'
 import NavMain from './nav-main'
 import { NavUser } from './nav-user'
@@ -22,19 +31,19 @@ const data = {
   },
   navMain: [
     {
-      title: 'CRM',
-      url: '/dashboard/CRM',
-      icon: DocumentTextIcon,
+      title: 'Users',
+      url: '/dashboard/users',
+      icon: UsersIcon,
       isActive: true,
       items: [
         {
-          title: 'Contacts',
-          url: '/dashboard/contact'
+          title: 'All Users',
+          url: '/dashboard/users/list'
+        },
+        {
+          title: 'Add User',
+          url: '/dashboard/users/add'
         }
-        // {
-        //   title: 'Contracts',
-        //   url: '/dashboard/contract'
-        // }
       ]
     },
     {
@@ -44,114 +53,128 @@ const data = {
       isActive: true,
       items: [
         {
-          title: 'Leads',
-          url: '/dashboard/leads'
+          title: 'All Leads',
+          url: '/dashboard/leads/list'
         },
         {
-          title: 'Budget Book',
-          url: '/dashboard/budget-book'
+          title: 'Add Lead',
+          url: '/dashboard/leads/add'
         }
       ]
     },
     {
-      title: 'Quotes',
-      url: '/dashboard/materialquotes/list',
+      title: 'Projects',
+      url: '/dashboard/project',
       icon: DocumentTextIcon,
       isActive: true,
       items: [
         {
-          title: 'Material Quotes',
-          url: '/dashboard/quotes/materialquotes/list'
+          title: 'All Projects',
+          url: '/dashboard/project/list'
         },
         {
-          title: 'Material',
-          url: '/dashboard/quotes/material/list'
+          title: 'Add Projects',
+          url: '/dashboard/project/add'
         }
       ]
     },
     {
-      title: 'Sales Pipeline  ',
-      url: '/dashboard/sales-pipeline',
-      icon: DocumentTextIcon,
+      title: 'Contractor',
+      url: '/dashboard/contract',
+      icon: Contact,
       isActive: true,
       items: [
         {
-          title: 'Sales Pipeline',
-          url: '/dashboard/sales-pipeline'
+          title: 'All Sub Contractor Leads',
+          url: '/dashboard/contract/list'
+        },
+        {
+          title: 'All Qualified Contractors',
+          url: '/dashboard/contract/qualified-contractor'
+        },
+        {
+          title: 'Add Sub Contractor',
+          url: '/dashboard/contract/add'
+        }
+      ]
+    },
+    {
+      title: 'Work Orders',
+      url: '/dashboard/workorders',
+      icon: FileText,
+      isActive: true,
+      items: [
+        {
+          title: 'All Work Orders',
+          url: '/dashboard/workorders/list'
+        },
+        {
+          title: 'Add Work Orders',
+          url: '/dashboard/workorders/add'
         }
       ]
     },
     {
       title: 'Settings',
-      url: '/dashboard/settings',
-      icon: User,
+      url: '/dashboard/setting',
+      icon: Settings,
       isActive: true,
       items: [
         {
-          title: 'Lead Settings',
-          url: '/dashboard/settings',
-          items: [
-            {
-              title: 'Leads Status',
-              url: '/dashboard/settings/lead-settings/leads-status'
-            },
-            {
-              title: 'Leads Type',
-              url: '/dashboard/settings/lead-settings/leads-type'
-            },
-            {
-              title: 'Leads Tags',
-              url: '/dashboard/settings/lead-settings/leads-tag'
-            },
-            {
-              title: 'Interaction Type',
-              url: '/dashboard/settings/lead-settings/interaction-type'
-            }
-          ]
+          title: 'All Sub Contractor Region',
+          url: '/dashboard/setting/manage-contractor-region'
         },
         {
-          title: 'Task Settings',
-          url: '/dashboard/settings',
-          items: [
-            {
-              title: 'Task Tags',
-              url: '/dashboard/settings/task-setting/task-tag'
-            },
-            {
-              title: 'Task Group',
-              url: '/dashboard/settings/task-setting/task-group'
-            },
-            {
-              title: 'Task Subject',
-              url: '/dashboard/settings/task-setting/task-subject'
-            },
-            {
-              title: 'Task Urgencies',
-              url: '/dashboard/settings/task-setting/task-urgency'
-            }
-          ]
+          title: 'All Work Order Categories',
+          url: '/dashboard/setting/work-order-categories'
+        }
+      ]
+    },
+    {
+      title: 'Products',
+      url: '/dashboard/product',
+      icon: LayoutGrid,
+      isActive: true,
+      items: [
+        {
+          title: 'Add Product',
+          url: '/dashboard/product/add'
         },
         {
-          title: 'User Settings',
-          url: '/dashboard/settings',
-          items: [
-            {
-              title: 'User List',
-              url: '/dashboard/settings/user-setting/list'
-            },
-            {
-              title: 'Role ',
-              url: '/dashboard/settings/user-setting/rolelist'
-            }
-          ]
+          title: 'All Products',
+          url: '/dashboard/product/list'
         },
         {
-          title: 'Budget Book Scope',
-          url: '/dashboard/settings/budget-book-setting/scopelist'
+          title: 'Material Quotes',
+          url: '/dashboard/product/material-quotes'
         },
         {
-          title: 'Pipeline',
-          url: '/dashboard/settings/pipeline'
+          title: 'Attributes',
+          url: '/dashboard/product/attribute'
+        },
+        {
+          title: 'Category',
+          url: '/dashboard/product/product-categories'
+        },
+        {
+          title: 'Inventory',
+          url: '/dashboard/product/inventory'
+        }
+      ]
+    },
+    {
+      title: 'Manufacturer',
+      url: '/dashboard/manufacturer',
+      icon: Factory,
+      isActive: true,
+      items: [
+        {
+          title: 'Add Manufacturer',
+          url: '/dashboard/manufacturer/add'
+        },
+        {
+          title: 'All Manufacturers',
+          url: '/dashboard/manufacturer/list'
         }
       ]
     }
@@ -163,10 +186,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible='icon' {...props}>
       <SidebarContent className='theme-bg'>
-        <div className='main-logo flex h-20 items-center justify-center gap-3 border-b bg-white px-2'>
-          <Link href='/dashboard' className='flex-shrink-0'>
-            <img src='/images/logo-b50fe6ce.jpeg' className='w-56' />{' '}
-          </Link>
+        <div className='flex items-center gap-3 px-2 justify-center main-logo'>
+          <Link href='/dashboard' className='flex-shrink-0'><img src='/images/fortress-logo.png' className='w-full' />{' '}</Link>
           {/* <p className={cn(
               'font-semibold transition-all',
               state === 'collapsed'
